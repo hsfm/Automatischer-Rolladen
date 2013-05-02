@@ -1,0 +1,100 @@
+FUNCTION_BLOCK rollo
+
+VAR_INPUT
+	Sonnenstaerke : REAL; (* RANGE(0 .. 4) *)
+	Tageszeit : REAL; (* RANGE(0 .. 24) *)	
+	Wetterlage : REAL; (* RANGE(0 .. 3) *)		
+END_VAR
+
+VAR_OUTPUT
+	Jalousienhoehe : REAL; (* RANGE(0 .. 21) *)	
+	Lamellenstellung : REAL; (* RANGE(0 .. 14) *)
+END_VAR
+
+FUZZIFY Sonnenstaerke
+	TERM niedrig := (-1.283, 1) (0, 1) (0.7, 1) (1.1, 0);
+	TERM mittel := (0.8, 0) (1, 1) (1.7, 1) (2.1, 0);
+	TERM hoch := (1.8, 0) (2, 1) (2.7, 1) (3.1, 0);
+	TERM sehr_hoch := (3, 0) (4, 1) (5.333, 1);
+END_FUZZIFY
+
+FUZZIFY Tageszeit
+	TERM morgen := (-7.65, 1) (0, 1) (5, 1) (7, 0);
+	TERM mittag := (6, 0) (9, 1) (14, 1) (16, 0);
+	TERM nachmittag := (13, 0) (15, 1) (19, 1) (20, 0);
+	TERM abend := (19.1, 0) (20, 1) (24, 1) (33.2, 1);
+END_FUZZIFY
+
+FUZZIFY Wetterlage
+	TERM ruhig := (-1.08, 1) (0, 1) (1.5, 1) (1.7, 0);
+	TERM stuermisch := (1.5, 0) (1.7, 1) (2.5, 1) (2.7, 0);
+	TERM sehr_stuermisch := (2.5, 0) (2.7, 1) (3, 1) (4.08, 1);
+END_FUZZIFY
+
+DEFUZZIFY Jalousienhoehe
+	TERM unten := (11, 0) (13.6, 1) (15, 0);
+	TERM viertel_oben := (1, 0) (3.4, 1) (5.1, 0);
+	TERM halb_oben := (5, 0) (6.8, 1) (8.5, 0);
+	TERM dreiviertel_oben := (8, 0) (10.2, 1) (11.9, 0);
+	TERM oben := (-0.6, 0) (0, 1) (1.7, 0);
+	
+	
+	METHOD : COG;		// Use 'Center Of Gravity' defuzzification method
+	DEFAULT := 0;		// Default value is 0 (if no rule activates defuzzifier)
+END_DEFUZZIFY
+
+DEFUZZIFY Lamellenstellung
+	TERM offen := (-4, 0) (0, 1) (4, 0);
+	TERM gekippt := (1, 0) (4.5, 1) (5.5, 1) (9, 0);
+	TERM zu := (6, 0) (14, 1) (15, 0);
+	
+	METHOD : COG;		// Use 'Center Of Gravity' defuzzification method
+	DEFAULT := 0;		
+END_DEFUZZIFY
+
+RULEBLOCK No1
+	AND : MIN;			// Use 'min' for 'and' (also implicit use 'max' for 'or' to fulfill DeMorgan's Law)
+	ACT : MIN;			// Use 'min' activation method
+	ACCU : MAX;			// Use 'max' accumulation method
+	
+	RULE 1 : IF Tageszeit IS abend THEN Jalousienhoehe IS unten;
+	RULE 2 : IF Tageszeit IS abend THEN Lamellenstellung IS zu;
+	RULE 3 : IF Tageszeit IS morgen THEN Jalousienhoehe IS unten;
+	RULE 4 : IF Tageszeit IS morgen THEN Lamellenstellung IS zu;
+	RULE 5 : IF Sonnenstaerke IS niedrig AND Tageszeit IS mittag AND Wetterlage IS ruhig THEN Jalousienhoehe IS oben;
+	RULE 6 : IF Sonnenstaerke IS niedrig AND Tageszeit IS mittag AND Wetterlage IS ruhig THEN Lamellenstellung IS offen;
+	RULE 7 : IF Sonnenstaerke IS hoch AND Tageszeit IS mittag AND Wetterlage IS ruhig THEN Jalousienhoehe IS halb_oben;
+	RULE 8 : IF Sonnenstaerke IS hoch AND Tageszeit IS mittag AND Wetterlage IS ruhig THEN Lamellenstellung IS zu;
+	RULE 9 : IF Sonnenstaerke IS sehr_hoch AND Tageszeit IS mittag AND Wetterlage IS ruhig THEN Jalousienhoehe IS viertel_oben;
+	RULE 10 : IF Sonnenstaerke IS sehr_hoch AND Tageszeit IS mittag AND Wetterlage IS ruhig THEN Lamellenstellung IS zu;
+	RULE 11 : IF Sonnenstaerke IS mittel AND Tageszeit IS mittag AND Wetterlage IS ruhig THEN Jalousienhoehe IS dreiviertel_oben;
+	RULE 12 : IF Sonnenstaerke IS mittel AND Tageszeit IS mittag AND Wetterlage IS ruhig THEN Lamellenstellung IS zu;
+	RULE 13 : IF Sonnenstaerke IS niedrig AND Tageszeit IS nachmittag AND Wetterlage IS ruhig THEN Jalousienhoehe IS oben;
+	RULE 14 : IF Sonnenstaerke IS niedrig AND Tageszeit IS nachmittag AND Wetterlage IS ruhig THEN Lamellenstellung IS offen;
+	RULE 15 : IF Sonnenstaerke IS mittel AND Tageszeit IS nachmittag AND Wetterlage IS ruhig THEN Jalousienhoehe IS dreiviertel_oben;
+	RULE 17 : IF Sonnenstaerke IS mittel AND Tageszeit IS nachmittag AND Wetterlage IS ruhig THEN Lamellenstellung IS gekippt;
+	RULE 18 : IF Sonnenstaerke IS hoch AND Tageszeit IS nachmittag AND Wetterlage IS ruhig THEN Jalousienhoehe IS halb_oben;
+	RULE 19 : IF Sonnenstaerke IS hoch AND Tageszeit IS nachmittag AND Wetterlage IS ruhig THEN Lamellenstellung IS gekippt;
+	RULE 20 : IF Sonnenstaerke IS sehr_hoch AND Tageszeit IS nachmittag AND Wetterlage IS ruhig THEN Jalousienhoehe IS viertel_oben;
+	RULE 21 : IF Sonnenstaerke IS sehr_hoch AND Tageszeit IS nachmittag AND Wetterlage IS ruhig THEN Lamellenstellung IS gekippt;
+	RULE 22 : IF Wetterlage IS sehr_stuermisch THEN Jalousienhoehe IS unten;
+	RULE 23 : IF Wetterlage IS sehr_stuermisch THEN Lamellenstellung IS zu;
+	RULE 24 : IF Sonnenstaerke IS niedrig AND Tageszeit IS mittag AND Wetterlage IS stuermisch THEN Jalousienhoehe IS halb_oben;
+	RULE 25 : IF Sonnenstaerke IS niedrig AND Tageszeit IS mittag AND Wetterlage IS stuermisch THEN Lamellenstellung IS zu;
+	RULE 26 : IF Sonnenstaerke IS hoch AND Tageszeit IS mittag AND Wetterlage IS stuermisch THEN Jalousienhoehe IS halb_oben;
+	RULE 27 : IF Sonnenstaerke IS hoch AND Tageszeit IS mittag AND Wetterlage IS stuermisch THEN Lamellenstellung IS zu;
+	RULE 28 : IF Sonnenstaerke IS sehr_hoch AND Tageszeit IS mittag AND Wetterlage IS stuermisch THEN Jalousienhoehe IS viertel_oben;
+	RULE 29 : IF Sonnenstaerke IS sehr_hoch AND Tageszeit IS mittag AND Wetterlage IS stuermisch THEN Lamellenstellung IS zu;
+	RULE 30 : IF Sonnenstaerke IS mittel AND Tageszeit IS mittag AND Wetterlage IS stuermisch THEN Jalousienhoehe IS halb_oben;
+	RULE 31 : IF Sonnenstaerke IS mittel AND Tageszeit IS mittag AND Wetterlage IS stuermisch THEN Lamellenstellung IS zu;
+	RULE 32 : IF Sonnenstaerke IS niedrig AND Tageszeit IS nachmittag AND Wetterlage IS stuermisch THEN Jalousienhoehe IS halb_oben;
+	RULE 33 : IF Sonnenstaerke IS niedrig AND Tageszeit IS nachmittag AND Wetterlage IS stuermisch THEN Lamellenstellung IS zu;
+	RULE 34 : IF Sonnenstaerke IS mittel AND Tageszeit IS nachmittag AND Wetterlage IS stuermisch THEN Jalousienhoehe IS halb_oben;
+	RULE 35 : IF Sonnenstaerke IS mittel AND Tageszeit IS nachmittag AND Wetterlage IS stuermisch THEN Lamellenstellung IS zu;
+	RULE 36 : IF Sonnenstaerke IS hoch AND Tageszeit IS nachmittag AND Wetterlage IS stuermisch THEN Jalousienhoehe IS halb_oben;
+	RULE 37 : IF Sonnenstaerke IS hoch AND Tageszeit IS nachmittag AND Wetterlage IS stuermisch THEN Lamellenstellung IS zu;
+	RULE 38 : IF Sonnenstaerke IS sehr_hoch AND Tageszeit IS nachmittag AND Wetterlage IS stuermisch THEN Jalousienhoehe IS viertel_oben;
+	RULE 39 : IF Sonnenstaerke IS sehr_hoch AND Tageszeit IS nachmittag AND Wetterlage IS stuermisch THEN Lamellenstellung IS zu;
+END_RULEBLOCK
+
+END_FUNCTION_BLOCK

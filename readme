@@ -1,0 +1,3 @@
+Applet zur automatischen Steuerung eines Rollladens abhängig von äußeren Bedingungen mittels Fuzzy Logic.
+
+Nutzt die OpenSource Fuzzy Logic engine "jFuzzyLogic" (http://jfuzzylogic.sourceforge.net/html/index.html).
